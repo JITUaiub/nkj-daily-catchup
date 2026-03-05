@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": { "@/*": ["./src/*"] },
+    "baseUrl": "."
+  },
+  "include": [
+    "src/vite-env.d.ts",
+    "src/main.tsx",
+    "src/App.tsx",
+    "src/pages",
+    "src/components/layout",
+    "src/components/command-palette",
+    "src/components/theme-toggle.tsx",
+    "src/contexts",
+    "src/lib/api.ts",
+    "src/lib/utils.ts",
+    "server"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/app",
+    "src/server",
+    "src/lib/trpc",
+    "src/lib/auth.ts",
+    "src/stores",
+    "src/components/dashboard",
+    "src/components/tasks",
+    "src/components/time",
+    "src/components/follow-ups",
+    "src/components/notes",
+    "src/components/meetings",
+    "src/components/projects",
+    "src/components/ai",
+    "src/components/settings",
+    "src/components/providers.tsx"
+  ]
+}
