@@ -1,5 +1,5 @@
-const getApiBase = () => {
-  const env = typeof import.meta.env !== "undefined" ? import.meta.env : {};
+const getApiBase = (): string => {
+  const env: ImportMetaEnv = import.meta.env;
   if (env.VITE_API_URL) return `${env.VITE_API_URL.replace(/\/$/, "")}/api`;
   if (env.DEV) return "http://localhost:3001/api";
   return "/api";
