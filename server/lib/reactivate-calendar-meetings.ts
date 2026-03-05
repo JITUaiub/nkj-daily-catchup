@@ -1,17 +1,13 @@
-import { and, eq } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { meetings } from "../db/schema.js";
+import { supabaseAdmin } from "../supabaseClient.js";
 
-export async function reactivateMeetingsForCalendarAccount(email: string): Promise<void> {
-  if (!db) return;
-  await db
-    .update(meetings)
-    .set({ status: "active", updatedAt: new Date() })
-    .where(
-      and(
-        eq(meetings.source, "google"),
-        eq(meetings.calendarAccountEmail, email),
-        eq(meetings.status, "dormant")
-      )
-    );
+export async function reactivateMeetingsForCalendarAccount(
+  email: string
+): Promise<void> {
+  if (!supabaseAdmin) return;
+  await supabaseAdmin
+    .from("meetings")
+    .update({ status: "active", updated_at: new Date().toISOString() })
+    .eq("source", "google")
+    .eq("calendar_account_email", email)
+    .eq("status", "dormant");
 }

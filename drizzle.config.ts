@@ -5,8 +5,8 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url:
-      process.env.DATABASE_URL ??
-      "postgresql://postgres:password@localhost:54322/postgres",
+    // Optional: local Postgres connection for Drizzle tooling only.
+    // The runtime app talks to Supabase via @supabase/supabase-js instead of a DATABASE_URL.
+    url: "postgresql://postgres:password@localhost:54322/postgres",
   },
 });

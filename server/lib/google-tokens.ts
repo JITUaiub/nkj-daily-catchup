@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { googleAccounts } from "../db/schema.js";
+import { supabaseAdmin } from "../supabaseClient.js";
 
 export async function saveGoogleToken(
   email: string,

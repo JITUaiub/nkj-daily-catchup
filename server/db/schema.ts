@@ -6,8 +6,11 @@ import {
   timestamp,
   boolean,
   pgEnum,
+  pgSchema,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+const workday = pgSchema("workday");
 
 const roleEnum = pgEnum("role", [
   "developer",
@@ -18,7 +21,7 @@ const roleEnum = pgEnum("role", [
   "admin",
 ]);
 
-export const users = pgTable("users", {
+export const users = workday.table("users", {
   id: varchar("id", { length: 36 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -28,7 +31,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const projects = pgTable("projects", {
+export const projects = workday.table("projects", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
@@ -37,9 +40,10 @@ export const projects = pgTable("projects", {
   color: varchar("color", { length: 20 }).notNull().default("#007AFF"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  description: text("description"),
 });
 
-export const projectMembers = pgTable("project_members", {
+export const projectMembers = workday.table("project_members", {
   id: varchar("id", { length: 36 }).primaryKey(),
   projectId: varchar("project_id", { length: 36 })
     .notNull()
@@ -47,6 +51,17 @@ export const projectMembers = pgTable("project_members", {
   userId: varchar("user_id", { length: 36 })
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const projectResources = workday.table("project_resources", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  projectId: varchar("project_id", { length: 36 })
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  designation: varchar("designation", { length: 255 }),
+  allocationHours: integer("allocation_hours").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -58,7 +73,7 @@ const taskStatusEnum = pgEnum("task_status", [
 ]);
 const priorityEnum = pgEnum("priority", ["P0", "P1", "P2", "P3"]);
 
-export const tasks = pgTable("tasks", {
+export const tasks = workday.table("tasks", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
@@ -66,6 +81,9 @@ export const tasks = pgTable("tasks", {
   title: varchar("title", { length: 500 }).notNull(),
   description: text("description"),
   projectId: varchar("project_id", { length: 36 }).references(() => projects.id, {
+    onDelete: "set null",
+  }),
+  meetingId: varchar("meeting_id", { length: 36 }).references(() => meetings.id, {
     onDelete: "set null",
   }),
   status: taskStatusEnum("status").notNull().default("todo"),
@@ -81,9 +99,10 @@ export const tasks = pgTable("tasks", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   carriedOverFrom: timestamp("carried_over_from", { withTimezone: true }),
+  loggedMinutes: integer("logged_minutes"),
 });
 
-export const taskChecklists = pgTable("task_checklists", {
+export const taskChecklists = workday.table("task_checklists", {
   id: varchar("id", { length: 36 }).primaryKey(),
   taskId: varchar("task_id", { length: 36 })
     .notNull()
@@ -93,7 +112,7 @@ export const taskChecklists = pgTable("task_checklists", {
   sortOrder: integer("sort_order").default(0),
 });
 
-export const timeEntries = pgTable("time_entries", {
+export const timeEntries = workday.table("time_entries", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
@@ -107,13 +126,16 @@ export const timeEntries = pgTable("time_entries", {
   note: text("note"),
 });
 
-export const followUps = pgTable("follow_ups", {
+export const followUps = workday.table("follow_ups", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
   }),
   title: varchar("title", { length: 500 }).notNull(),
   contextNote: text("context_note"),
+  meetingId: varchar("meeting_id", { length: 36 }).references(() => meetings.id, {
+    onDelete: "set null",
+  }),
   dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   priority: priorityEnum("priority").notNull().default("P2"),
@@ -125,7 +147,7 @@ export const followUps = pgTable("follow_ups", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const dailyNotes = pgTable("daily_notes", {
+export const dailyNotes = workday.table("daily_notes", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
@@ -142,6 +164,7 @@ export const dailyNotes = pgTable("daily_notes", {
 export const meetingStatusEnum = pgEnum("meeting_status", [
   "active",
   "cancelled",
+  "completed",
   "dormant",
 ]);
 export const meetingSourceEnum = pgEnum("meeting_source", [
@@ -149,7 +172,7 @@ export const meetingSourceEnum = pgEnum("meeting_source", [
   "google",
 ]);
 
-export const meetings = pgTable("meetings", {
+export const meetings = workday.table("meetings", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 }).references(() => users.id, {
     onDelete: "cascade",
@@ -173,7 +196,7 @@ export const meetings = pgTable("meetings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const googleAccounts = pgTable("google_accounts", {
+export const googleAccounts = workday.table("google_accounts", {
   id: varchar("id", { length: 36 }).primaryKey(),
   userEmail: varchar("user_email", { length: 255 }).notNull().unique(),
   accessToken: text("access_token").notNull(),
@@ -191,4 +214,5 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 export const projectsRelations = relations(projects, ({ many }) => ({
   tasks: many(tasks),
   members: many(projectMembers),
+  resources: many(projectResources),
 }));

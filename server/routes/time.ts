@@ -1,9 +1,16 @@
 import { Router, Request, Response } from "express";
-import { eq, gte } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { timeEntries } from "../db/schema.js";
+import { supabaseAdmin } from "../supabaseClient.js";
 
 const router = Router();
+
+type TimeEntryRow = {
+  id: string;
+  user_id: string | null;
+  task_id: string | null;
+  started_at: string;
+  ended_at: string | null;
+  category: string;
+};
 
 function startOfToday() {
   const d = new Date();
@@ -12,61 +19,76 @@ function startOfToday() {
 }
 
 router.get("/active", async (_req: Request, res: Response) => {
-  if (!db) return res.json(null);
-  const rows = await db
-    .select()
-    .from(timeEntries)
-    .where(eq(timeEntries.endedAt, null as unknown as Date));
-  const row = rows[0];
+  if (!supabaseAdmin) return res.json(null);
+  const { data, error } = await supabaseAdmin
+    .from("time_entries")
+    .select("*")
+    .is("ended_at", null)
+    .limit(1);
+
+  if (error) return res.status(500).json({ error: error.message });
+  const row = (data as TimeEntryRow[])[0];
   if (!row) return res.json(null);
   res.json({
     id: row.id,
-    startedAt: row.startedAt,
-    taskId: row.taskId,
+    startedAt: row.started_at,
+    taskId: row.task_id,
     category: row.category,
   });
 });
 
 router.post("/start", async (req: Request, res: Response) => {
-  if (!db) return res.status(503).json({ error: "No database" });
+  if (!supabaseAdmin) return res.status(503).json({ error: "No database" });
   const body = req.body as { taskId?: string; category?: string };
   const id = crypto.randomUUID();
   const startedAt = new Date();
-  await db.insert(timeEntries).values({
+  const { error } = await supabaseAdmin.from("time_entries").insert({
     id,
-    startedAt,
-    taskId: body?.taskId ?? null,
+    started_at: startedAt.toISOString(),
+    task_id: body?.taskId ?? null,
     category: body?.category ?? "coding",
   });
+  if (error) return res.status(500).json({ error: error.message });
   res.status(201).json({ id, startedAt });
 });
 
 router.post("/stop", async (_req: Request, res: Response) => {
-  if (!db) return res.status(503).json({ error: "No database" });
+  if (!supabaseAdmin) return res.status(503).json({ error: "No database" });
   const now = new Date();
-  const rows = await db
-    .select()
-    .from(timeEntries)
-    .where(eq(timeEntries.endedAt, null as unknown as Date));
-  const row = rows[0];
+  const { data, error } = await supabaseAdmin
+    .from("time_entries")
+    .select("*")
+    .is("ended_at", null)
+    .limit(1);
+  if (error) return res.status(500).json({ error: error.message });
+
+  const row = (data as TimeEntryRow[])[0];
   if (row) {
-    await db.update(timeEntries).set({ endedAt: now }).where(eq(timeEntries.id, row.id));
+    const updateError = (
+      await supabaseAdmin
+        .from("time_entries")
+        .update({ ended_at: now.toISOString() })
+        .eq("id", row.id)
+    ).error;
+    if (updateError) return res.status(500).json({ error: updateError.message });
   }
   res.json({});
 });
 
 router.get("/today", async (_req: Request, res: Response) => {
-  if (!db) return res.json({ byProject: [], byCategory: [], total: 0 });
+  if (!supabaseAdmin) return res.json({ byProject: [], byCategory: [], total: 0 });
   const start = startOfToday();
-  const rows = await db
-    .select()
-    .from(timeEntries)
-    .where(gte(timeEntries.startedAt, start));
+  const { data, error } = await supabaseAdmin
+    .from("time_entries")
+    .select("*")
+    .gte("started_at", start.toISOString());
+  if (error) return res.status(500).json({ error: error.message });
+
   const byCategory: Record<string, number> = {};
   const now = new Date();
-  for (const r of rows) {
-    const end = r.endedAt ?? now;
-    const min = Math.round((end.getTime() - new Date(r.startedAt).getTime()) / 60000);
+  for (const r of data as TimeEntryRow[]) {
+    const end = r.ended_at ? new Date(r.ended_at) : now;
+    const min = Math.round((end.getTime() - new Date(r.started_at).getTime()) / 60000);
     byCategory[r.category] = (byCategory[r.category] ?? 0) + min;
   }
   const byCategoryList = Object.entries(byCategory).map(([category, minutes]) => ({

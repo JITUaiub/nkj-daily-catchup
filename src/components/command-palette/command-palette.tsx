@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   CheckSquare,
-  Clock,
+  ListTodo,
   Bell,
+  Clock,
   FileText,
   Calendar,
+  FolderKanban,
   Sparkles,
 } from "lucide-react";
 import { useCommandPalette } from "@/contexts/command-palette-context";
@@ -15,10 +17,12 @@ import { cn } from "@/lib/utils";
 const actions = [
   { href: "/", label: "Go to My Day", icon: Search },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/time", label: "Time Tracker", icon: Clock },
+  { href: "/action-items", label: "Action Items", icon: ListTodo },
   { href: "/follow-ups", label: "Follow-ups", icon: Bell },
-  { href: "/notes", label: "Notes", icon: FileText },
   { href: "/meetings", label: "Meetings", icon: Calendar },
+  { href: "/notes", label: "Notes", icon: FileText },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/time", label: "Time Tracker", icon: Clock },
   { href: "/ai", label: "WorkDay AI", icon: Sparkles },
 ];
 

@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   CheckSquare,
-  Clock,
+  ListTodo,
   Bell,
   FileText,
   Calendar,
@@ -18,10 +18,10 @@ import { CommandPaletteTrigger } from "@/components/command-palette/trigger";
 const navItems = [
   { href: "/", label: "My Day", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/time", label: "Time", icon: Clock },
+  { href: "/action-items", label: "Action Items", icon: ListTodo },
   { href: "/follow-ups", label: "Follow-ups", icon: Bell },
-  { href: "/notes", label: "Notes", icon: FileText },
   { href: "/meetings", label: "Meetings", icon: Calendar },
+  { href: "/notes", label: "Notes", icon: FileText },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/ai", label: "WorkDay AI", icon: Sparkles },
 ];

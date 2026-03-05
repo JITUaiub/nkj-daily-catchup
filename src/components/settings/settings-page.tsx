@@ -72,7 +72,9 @@ export function SettingsPage() {
               </span>
               <div className="flex-1">
                 <p className="font-medium">Database</p>
-                <p className="text-sm text-apple-gray-2">Set DATABASE_URL in .env to persist tasks, time, notes, and more.</p>
+                <p className="text-sm text-apple-gray-2">
+                  Set Supabase URL and keys in .env so WorkDay can persist tasks, time, notes, and more.
+                </p>
               </div>
             </div>
           </li>

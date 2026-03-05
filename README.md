@@ -10,7 +10,7 @@ Plan, track, and reflect on your workday. Rebuilt with a modern stack.
 | UI           | React 19 + TypeScript   |
 | Styling      | Tailwind CSS v4         |
 | Routing      | React Router v7         |
-| Data / Auth  | Local MySQL             |
+| Data / Auth  | Supabase (Postgres)     |
 | Server state | TanStack React Query    |
 | Animations   | Framer Motion           |
 | Icons        | Lucide React            |
@@ -27,21 +27,17 @@ Plan, track, and reflect on your workday. Rebuilt with a modern stack.
 
    Copy `.env.example` to `.env` and set:
 
-   - `DATABASE_URL` — MySQL connection string (e.g. `mysql://user:password@localhost:3306/workday`)
+   - `SUPABASE_URL` / `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase project URL + anon key (from Supabase Dashboard → Project Settings → API)
+   - `SUPABASE_SERVICE_ROLE_KEY` — server-side key for backend access (keep this secret)
    - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — for Google Calendar (optional)
    - `JWT_SECRET` — secret for session JWTs
    - `FRONTEND_URL` — e.g. `http://localhost:5173`
    - `API_URL` — e.g. `http://localhost:3001`
 
-3. **Database**
+3. **Database (Supabase)**
 
-   Run migrations (use existing Drizzle migrations; schema is in `server/db/schema.ts`):
-
-   ```bash
-   npm run db:migrate
-   ```
-
-   For new installs you may need to run `drizzle/0000_initial.sql` and `migrations/001_meetings_status_source_notes.sql` manually if needed.
+   In [Supabase Dashboard](https://supabase.com/dashboard) → your project → **SQL Editor**, run the contents of `supabase-schema.sql` (one-time).  
+   This creates all `workday` schema tables to match the Drizzle models in `server/db/schema.ts`.
 
 ## Development
 
@@ -109,7 +105,7 @@ The Express server in `server/` cannot run as a long-lived process on Vercel. De
    `npx tsx server/index.ts`  
    (or build first: `npm run build` then `node server/index.js` if you add a build step).
 4. In **Variables**, add the same env vars your API needs:  
-   `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL` (your Vercel URL, e.g. `https://your-project.vercel.app`), `API_URL` (the Railway URL you’ll get), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, etc.
+   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `FRONTEND_URL` (your Vercel URL, e.g. `https://your-project.vercel.app`), `API_URL` (the Railway URL you’ll get), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, etc.
 5. Deploy. Copy the public URL (e.g. `https://your-app.railway.app`).
 
 **Option B — Render**
@@ -118,7 +114,7 @@ The Express server in `server/` cannot run as a long-lived process on Vercel. De
 2. **New** → **Web Service** → connect your repo.
 3. **Build Command**: `npm install`  
    **Start Command**: `npx tsx server/index.ts`  
-   **Environment**: add `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`, `API_URL`, Google OAuth vars, etc.
+   **Environment**: add `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, `FRONTEND_URL`, `API_URL`, Google OAuth vars, etc.
 4. Under **Environment**, set `FRONTEND_URL` to your Vercel URL.
 5. Deploy and copy the service URL.
 
@@ -151,7 +147,7 @@ In [Google Cloud Console](https://console.cloud.google.com) → APIs & Services 
 ## Project layout
 
 - `src/` — Vite/React app (main.tsx, App, pages, components, contexts, lib/api)
-- `server/` — Express API (auth, REST routes, Drizzle schema, MySQL)
+- `server/` — Express API (auth, REST routes, Drizzle schema, Supabase Postgres)
 - `drizzle/` — Migrations (schema lives in `server/db/schema.ts`; point Drizzle at that)
 - `public/` — Static assets
 

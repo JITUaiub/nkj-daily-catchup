@@ -9,6 +9,7 @@ import timeRoutes from "./routes/time.js";
 import followUpRoutes from "./routes/follow-ups.js";
 import noteRoutes from "./routes/notes.js";
 import meetingRoutes from "./routes/meetings.js";
+import actionItemsRoutes from "./routes/action-items.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -30,6 +31,7 @@ app.use("/api/time", timeRoutes);
 app.use("/api/follow-ups", followUpRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/meetings", meetingRoutes);
+app.use("/api/action-items", actionItemsRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });

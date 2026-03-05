@@ -79,7 +79,9 @@ router.get("/google/callback", async (req: Request, res: Response) => {
   const email = userInfo.email ?? "";
   const name = userInfo.name ?? email;
 
-  const { saveGoogleToken } = await import("../lib/google-tokens.js");
+  const { saveGoogleToken } = await import(
+    "../lib/google-tokens-supabase.js"
+  );
   const { reactivateMeetingsForCalendarAccount } = await import(
     "../lib/reactivate-calendar-meetings.js"
   );

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   CheckSquare,
@@ -8,6 +9,7 @@ import {
   Bell,
   ListTodo,
   Video,
+  ChevronRight,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatDuration } from "@/lib/utils";
@@ -151,9 +153,17 @@ export function DashboardPage() {
             initial="hidden"
             animate="show"
           >
-            <h2 className="section-title flex items-center gap-2">
-              <ListTodo className="w-3.5 h-3.5" />
-              Today&apos;s tasks
+            <h2 className="section-title flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <ListTodo className="w-3.5 h-3.5" />
+                Today&apos;s tasks
+              </span>
+              <Link
+                to="/action-items"
+                className="text-xs font-medium text-[var(--color-primary)] hover:underline flex items-center gap-0.5"
+              >
+                Action Items <ChevronRight className="w-3 h-3" />
+              </Link>
             </h2>
             <ul className="space-y-2">
               {tasks.slice(0, 5).map((t) => (
@@ -178,7 +188,11 @@ export function DashboardPage() {
               ))}
               {tasks.length === 0 && (
                 <li className="empty-state">
-                  No tasks due today. Add some on the Tasks page.
+                  No tasks due today. Add some on{" "}
+                  <Link to="/action-items" className="text-[var(--color-primary)] hover:underline">
+                    Action Items
+                  </Link>
+                  .
                 </li>
               )}
             </ul>
@@ -189,9 +203,17 @@ export function DashboardPage() {
             initial="hidden"
             animate="show"
           >
-            <h2 className="section-title flex items-center gap-2">
-              <Video className="w-3.5 h-3.5" />
-              Today&apos;s meetings
+            <h2 className="section-title flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <Video className="w-3.5 h-3.5" />
+                Today&apos;s meetings
+              </span>
+              <Link
+                to="/meetings"
+                className="text-xs font-medium text-[var(--color-primary)] hover:underline flex items-center gap-0.5"
+              >
+                Meetings <ChevronRight className="w-3 h-3" />
+              </Link>
             </h2>
             <ul className="space-y-2">
               {meetings.slice(0, 5).map((m) => (

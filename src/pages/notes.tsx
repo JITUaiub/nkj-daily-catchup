@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, addDays, subDays } from "date-fns";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListTodo } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { api } from "@/lib/api";
@@ -30,6 +30,20 @@ export function NotesPage() {
     }) => api.notes.upsert(payload),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["notes", date] }),
+  });
+
+  const promoteMutation = useMutation({
+    mutationFn: () =>
+      api.actionItems.promoteFromNotes({
+        todayPlanText: todayPlan,
+        date,
+      }),
+    onSuccess: (res) => {
+      if (res.created > 0) {
+        queryClient.invalidateQueries({ queryKey: ["action-items"] });
+        queryClient.invalidateQueries({ queryKey: ["follow-ups"] });
+      }
+    },
   });
 
   const handleSave = () => {
@@ -67,9 +81,14 @@ export function NotesPage() {
     <div className="page">
       <div className="page-content">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-semibold text-[var(--color-label)] tracking-tight">
-            Notes
-          </h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--color-label)] tracking-tight">
+              Notes
+            </h1>
+            <p className="mt-1 text-sm text-[var(--color-secondary-label)]">
+              Daily notes, plans, and reflections. Create action items from today&apos;s plan.
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -92,15 +111,17 @@ export function NotesPage() {
         </div>
 
         {isLoading ? (
-          <div className="empty-state">Loading...</div>
+          <div className="empty-state rounded-xl border border-[var(--color-separator)] bg-[var(--color-card)]">
+            Loading…
+          </div>
         ) : (
           <motion.div
             className="space-y-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div>
-              <label className="section-title block mb-2">
+            <div className="card card-elevated p-4 rounded-xl space-y-2">
+              <label className="section-title block">
                 Yesterday summary
               </label>
               <textarea
@@ -108,23 +129,41 @@ export function NotesPage() {
                 onChange={(e) => setYesterdaySummary(e.target.value)}
                 onBlur={handleSave}
                 rows={2}
-                className="input resize-none"
+                className="input resize-none rounded-xl"
               />
             </div>
-            <div>
-              <label className="section-title block mb-2">
-                Today&apos;s plan
-              </label>
+            <div className="card card-elevated p-4 rounded-xl space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <label className="section-title block">
+                  Today&apos;s plan
+                </label>
+                <button
+                  type="button"
+                  onClick={() => promoteMutation.mutate()}
+                  disabled={!todayPlan.trim() || promoteMutation.isPending}
+                  className="btn btn-ghost btn-xs inline-flex items-center gap-1"
+                >
+                  {promoteMutation.isPending ? (
+                    "Creating…"
+                  ) : (
+                    <>
+                      <ListTodo className="w-3.5 h-3.5" />
+                      Create action items
+                    </>
+                  )}
+                </button>
+              </div>
               <textarea
                 value={todayPlan}
                 onChange={(e) => setTodayPlan(e.target.value)}
                 onBlur={handleSave}
                 rows={3}
-                className="input resize-none"
+                className="input resize-none rounded-xl"
+                placeholder="One item per line. Use &quot;Create action items&quot; to add to your list."
               />
             </div>
-            <div>
-              <label className="section-title block mb-2">
+            <div className="card card-elevated p-4 rounded-xl space-y-2">
+              <label className="section-title block">
                 Scratch pad
               </label>
               <textarea
@@ -132,11 +171,11 @@ export function NotesPage() {
                 onChange={(e) => setScratchPad(e.target.value)}
                 onBlur={handleSave}
                 rows={5}
-                className="input resize-none"
+                className="input resize-none rounded-xl"
               />
             </div>
-            <div>
-              <label className="section-title block mb-2">
+            <div className="card card-elevated p-4 rounded-xl space-y-2">
+              <label className="section-title block">
                 End of day reflection
               </label>
               <textarea
@@ -144,7 +183,7 @@ export function NotesPage() {
                 onChange={(e) => setEndOfDayReflection(e.target.value)}
                 onBlur={handleSave}
                 rows={3}
-                className="input resize-none"
+                className="input resize-none rounded-xl"
               />
             </div>
             {isToday && (

@@ -45,22 +45,122 @@ export const api = {
       if (params?.status) q.set("status", params.status);
       if (params?.dueToday) q.set("dueToday", "true");
       const query = q.toString();
-      return request<{ id: string; title: string; description: string | null; projectId: string | null; status: string; priority: string; estimatedMinutes: number | null; dueDate: string | null; sortOrder: number; createdAt: string }[]>(
+      return request<{
+        id: string;
+        title: string;
+        description: string | null;
+        projectId: string | null;
+        status: string;
+        priority: string;
+        estimatedMinutes: number | null;
+        dueDate: string | null;
+        sortOrder: number;
+        loggedMinutes: number;
+        createdAt: string;
+      }[]>(
         `/tasks${query ? `?${query}` : ""}`
       );
     },
-    create: (body: { title: string; description?: string; projectId?: string; priority?: string; estimatedMinutes?: number; dueDate?: string }) =>
-      request<{ id: string; title: string; description: string | null; projectId: string | null; status: string; priority: string; estimatedMinutes: number | null; dueDate: string | null; sortOrder: number; createdAt: string }>("/tasks", { method: "POST", json: body }),
+    create: (body: {
+      title: string;
+      description?: string;
+      projectId?: string;
+      priority?: string;
+      estimatedMinutes?: number;
+      dueDate?: string;
+    }) =>
+      request<{
+        id: string;
+        title: string;
+        description: string | null;
+        projectId: string | null;
+        status: string;
+        priority: string;
+        estimatedMinutes: number | null;
+        dueDate: string | null;
+        sortOrder: number;
+        loggedMinutes: number;
+        createdAt: string;
+      }>("/tasks", { method: "POST", json: body }),
+    update: (
+      id: string,
+      body: Partial<{
+        title: string;
+        description: string | null;
+        projectId: string | null;
+        status: string;
+        priority: string;
+        estimatedMinutes: number | null;
+        dueDate: string | null;
+        loggedMinutes: number | null;
+      }>
+    ) =>
+      request<{
+        id: string;
+        title: string;
+        description: string | null;
+        projectId: string | null;
+        status: string;
+        priority: string;
+        estimatedMinutes: number | null;
+        dueDate: string | null;
+        sortOrder: number;
+        loggedMinutes: number;
+        createdAt: string;
+      }>(`/tasks/${id}`, {
+        method: "PATCH",
+        json: body,
+      }),
     updateStatus: (id: string, status: string) =>
       request<Record<string, never>>(`/tasks/${id}/status`, { method: "PATCH", json: { status } }),
     reorder: (taskIds: string[]) =>
       request<Record<string, never>>("/tasks/reorder", { method: "POST", json: { taskIds } }),
+    remove: (id: string) =>
+      request<Record<string, never>>(`/tasks/${id}`, { method: "DELETE" }),
+    logTime: (id: string, minutes: number) =>
+      request<{ id: string; loggedMinutes: number }>(`/tasks/${id}/log-time`, {
+        method: "POST",
+        json: { minutes },
+      }),
   },
   projects: {
     list: () =>
-      request<{ id: string; name: string; color: string }[]>("/projects"),
-    create: (body: { name: string; color?: string }) =>
-      request<{ id: string; name: string; color: string }>("/projects", { method: "POST", json: body }),
+      request<
+        {
+          id: string;
+          name: string;
+          color: string;
+          description: string | null;
+          resources: { id: string; name: string; designation: string | null; allocationHours: number }[];
+        }[]
+      >("/projects"),
+    get: (id: string) =>
+      request<{
+        id: string;
+        name: string;
+        color: string;
+        description: string | null;
+        resources: { id: string; name: string; designation: string | null; allocationHours: number }[];
+      }>(`/projects/${id}`),
+    create: (body: {
+      name: string;
+      color?: string;
+      description?: string;
+      resources?: { name: string; designation?: string; allocationHours: number }[];
+    }) =>
+      request<{
+        id: string;
+        name: string;
+        color: string;
+        description: string | null;
+        resources: { id?: string; name: string; designation?: string; allocationHours: number }[];
+      }>("/projects", { method: "POST", json: body }),
+    update: (id: string, body: { name?: string; color?: string; description?: string; resources?: { id?: string; name: string; designation?: string; allocationHours: number }[] }) =>
+      request<{ id: string; name: string; color: string; description: string | null; resources: unknown[] }>(`/projects/${id}`, { method: "PATCH", json: body }),
+    remove: (id: string) =>
+      request<undefined>(`/projects/${id}`, { method: "DELETE" }),
+    generateSummary: (id: string) =>
+      request<{ summary: string }>(`/projects/${id}/ai/summary`, { method: "POST" }),
   },
   time: {
     getActive: () =>
@@ -130,5 +230,61 @@ export const api = {
       request<{ ok: boolean }>(`/meetings/${id}`, { method: "PATCH", json: body }),
     disconnectGoogle: () =>
       request<{ success: boolean }>("/meetings/disconnect-google", { method: "POST" }),
+    generatePrep: (id: string, body?: { extraContext?: string }) =>
+      request<{ suggestion: string }>(`/meetings/${id}/ai/prep`, {
+        method: "POST",
+        json: body ?? {},
+      }),
+    generateActionItems: (id: string, body?: { transcript?: string; notes?: string }) =>
+      request<{ suggestion: string }>(`/meetings/${id}/ai/action-items`, {
+        method: "POST",
+        json: body ?? {},
+      }),
+  },
+  actionItems: {
+    list: (params?: { filter?: string; projectId?: string; dueToday?: boolean }) => {
+      const q = new URLSearchParams();
+      if (params?.filter) q.set("filter", params.filter);
+      if (params?.projectId) q.set("projectId", params.projectId);
+      if (params?.dueToday) q.set("dueToday", "true");
+      const query = q.toString();
+      return request<{
+        tasks: {
+          id: string;
+          type: "task";
+          title: string;
+          status: string;
+          priority: string;
+          dueAt: string | null;
+          projectId: string | null;
+          meetingId: string | null;
+          meeting?: { id: string; title: string; startAt: string; endAt: string };
+          createdAt: string;
+          loggedMinutes?: number;
+        }[];
+        followUps: {
+          id: string;
+          type: "follow_up";
+          title: string;
+          status: string;
+          priority: string;
+          dueAt: string | null;
+          meetingId: string | null;
+          meeting?: { id: string; title: string; startAt: string; endAt: string };
+          createdAt: string;
+          completedAt?: string | null;
+        }[];
+      }>(`/action-items${query ? `?${query}` : ""}`);
+    },
+    promoteFromMeeting: (meetingId: string, body: { actionItemsText: string; asTasks?: boolean }) =>
+      request<{ created: number; ids: string[] }>(
+        `/action-items/promote-from-meeting/${meetingId}`,
+        { method: "POST", json: body }
+      ),
+    promoteFromNotes: (body: { todayPlanText: string; date?: string }) =>
+      request<{ created: number; ids: string[] }>("/action-items/promote-from-notes", {
+        method: "POST",
+        json: body,
+      }),
   },
 };
