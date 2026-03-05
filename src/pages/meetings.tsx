@@ -7,9 +7,11 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const API_BASE =
-  typeof import.meta.env !== "undefined" && import.meta.env.DEV
-    ? "http://localhost:3001"
-    : "";
+  typeof import.meta.env !== "undefined" && import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+    : typeof import.meta.env !== "undefined" && import.meta.env.DEV
+      ? "http://localhost:3001"
+      : "";
 
 export function MeetingsPage() {
   const queryClient = useQueryClient();

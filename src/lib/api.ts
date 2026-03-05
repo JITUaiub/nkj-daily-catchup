@@ -1,7 +1,10 @@
-const API =
-  typeof import.meta.env !== "undefined" && import.meta.env.DEV
-    ? "http://localhost:3001/api"
-    : "/api";
+const getApiBase = () => {
+  const env = typeof import.meta.env !== "undefined" ? import.meta.env : {};
+  if (env.VITE_API_URL) return `${env.VITE_API_URL.replace(/\/$/, "")}/api`;
+  if (env.DEV) return "http://localhost:3001/api";
+  return "/api";
+};
+const API = getApiBase();
 
 async function request<T>(
   path: string,
